@@ -5,6 +5,9 @@ from django.contrib.auth.models import User
 class IssueType(models.Model):
     title = models.CharField(max_length=255, unique=True)
 
+    def __strt__(self):
+        return self.title
+
 class Resolution(models.Model):
     title = models.CharField(max_length=255, unique=True)
 
@@ -23,7 +26,12 @@ class Issue(models.Model):
     resolved_at = models.DateTimeField(null=True, blank=True)
     resolved_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='+')
     duplicate_of = models.ForeignKey('self', on_delete=models.CASCADE, null=True, blank=True)
+    
+    class Meta:
+        ordering = ['-created_at']
 
+    def __str__(self):
+        return f"Issue: {self.id}"
 
 class Comment(models.Model):
     issue = models.ForeignKey('Issue', on_delete=models.CASCADE)
@@ -32,3 +40,9 @@ class Comment(models.Model):
     title = models.CharField(max_length=255)
     description_md = models.TextField()
     description_html = models.TextField(editable=False) # A user cant edit
+
+    class Meta: 
+        ordering = ['-issue__created_at','created_at']#the first "" is the sorting by issue created date and the second is sorting by comment created date
+    
+    def __str__(self):
+        return f"Comment: #{self.id}"
