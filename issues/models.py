@@ -1,5 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import User
+import markdown2
 
 # Create your models here.
 class IssueType(models.Model):
@@ -22,7 +23,7 @@ class Issue(models.Model):
     issue_type = models.ForeignKey('IssueType', on_delete=models.PROTECT)
     assignee = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='+')
     due_date = models.DateField(null=True, blank=True)
-    resolution = models.ForeignKey('Resolution', on_delete=models.PROTECT)
+    resolution = models.ForeignKey('Resolution', on_delete=models.PROTECT, null=True, blank=True)
     resolved_at = models.DateTimeField(null=True, blank=True)
     resolved_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='+')
     duplicate_of = models.ForeignKey('self', on_delete=models.CASCADE, null=True, blank=True)
@@ -32,6 +33,11 @@ class Issue(models.Model):
 
     def __str__(self):
         return f"Issue: {self.id}"
+    
+    def save(self, *args, **kwargs):
+        # Convert Markdown to HTML before saving
+        self.description_html = markdown2.markdown(self.description_md)
+        super().save(*args, **kwargs)
 
 class Comment(models.Model):
     issue = models.ForeignKey('Issue', on_delete=models.CASCADE)
@@ -46,3 +52,11 @@ class Comment(models.Model):
     
     def __str__(self):
         return f"Comment: #{self.id}"
+    
+    def save(self, *args, **kwargs):
+        # Convert Markdown to HTML before saving
+        self.description_html = markdown2.markdown(self.description_md)
+        super().save(*args, **kwargs)
+    
+
+
